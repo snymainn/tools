@@ -14,10 +14,12 @@
 # Ex - run many times:
 # log = SNYLogger(basename="my_program")
 # log.logprint("Write a logtext")
+# log.debug("Verbose logtext that can be printed to screen if stdout>1")
 #
 # Ex - running continously: 
 # log = SNYLogger(basename="my_program", size_limit=10)
 # log.logprint("Write logtext")
+# log.debug("Verbose logtext that can be printed to screen if stdout>1")
 
 
 from dircache import listdir
@@ -39,7 +41,7 @@ class SNYLogger:
         self.rotate_files()
 
 
-    def logprint(self, text):
+    def logprint(self, text, debug = 0):
         nowstring = strftime("%Y-%m-%dT%H:%M:%S", gmtime())
         if (self.filehandle) :
             if (self.size_limit):
@@ -56,11 +58,15 @@ class SNYLogger:
             
             self.filehandle.write(nowstring+' : '+text+'\n')
             self.filehandle.flush()
-            if (self.stdout):
-                print "%s : %s" % (nowstring,text)
-                sys.stdout.flush()
+        #if self.stdout = 1, only print logprint message to screen
+        #if self.stdout > 1, also print debug messages to screen        
+        if ( self.stdout > debug ):
+            print "%s : %s" % (nowstring,text)
+            sys.stdout.flush()
 
-
+    def debug(self, text):
+        self.logprint(text, debug=1)
+        
     def rotate_files(self):
         logfilename = self.basename+'.log'
         #print "logfilename : %s" % logfilename
