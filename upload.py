@@ -16,7 +16,7 @@ def read_skipfile(infile, log):
         newline = line.rstrip('\r\n')
         linelength = len(newline)
         if linelength>0:
-            log.logprint("Adding "+newline+" to skiplines")
+            log.debug("Adding "+newline+" to skiplines")
             tmpobjects = re.compile(newline)        
             skiplines.append(tmpobjects)
     skipfile.close()
@@ -28,7 +28,7 @@ def read_skipfile(infile, log):
 def get_local_files(localpath,log):
     locallist = list()     
     os.chdir(localpath)
-    log.logprint("*** GETTING LOCAL FILELIST ***")
+    log.debug("*** GETTING LOCAL FILELIST ***")
     for name in os.listdir("."):
         if (not name.startswith('.')):
             statinfo = os.stat(name)
@@ -39,7 +39,7 @@ def get_local_files(localpath,log):
                 entrytype = "dir"
             size = statinfo.st_size
             date = statinfo.st_mtime
-            log.logprint("Date:"+str(int(date))+" type:"+entrytype+", name:"+name+" size:"+str(size))
+            log.debug("Date:"+str(int(date))+" type:"+entrytype+", name:"+name+" size:"+str(size))
             locallist.append({'name':name,'type':entrytype,'modify':int(date),'size':size})
     return locallist        
 
@@ -52,9 +52,9 @@ def ftp_login(args, log):
     port = 21
     ftp.connect(args.host, port)
     try:
-        log.logprint("Logging in...")
+        log.debug("Logging in...")
         ftp.login(args.user, args.password)
-        log.logprint(ftp.getwelcome())
+        log.debug(ftp.getwelcome())
     except ftplib.error_perm, resp:
         log.logprint(str(resp))
     except:
@@ -68,13 +68,13 @@ def get_remote_files(ftp, remotepath, args, log):
     # LIST CONTENTS
     contents = list()
     dirlist = list()
-    log.logprint("*** GET REMOTE FILELIST ***")
+    log.debug("*** GET REMOTE FILELIST ***")
     try:
         ftp.cwd(remotepath)
         # Entry point
         ftp.retrlines('MLSD', contents.append)
         for line in contents:    
-#            log.logprint(line)
+#            log.debug(line)
             entry = line.split(";")
             size = "0" #Set this because directories does not report size
             for item in entry:
@@ -91,7 +91,7 @@ def get_remote_files(ftp, remotepath, args, log):
                     #If string does not contain =, cell[1] will not be defined
                     #and first entry in cell[0] string will be whitespace
                     name = cell[0].lstrip()
-            log.logprint("Date:"+str(modify)+" type:"+entrytype+" Name:"+name+" size:"+size)
+            log.debug("Date:"+str(modify)+" type:"+entrytype+" Name:"+name+" size:"+size)
             if (entrytype=='file' or entrytype=='dir'):   #Do not include current and parent dir entries
                 dirlist.append({'name':name,'type':entrytype,'modify':int(modify),'size':size})
     except ftplib.error_perm, resp:
@@ -152,15 +152,15 @@ def sync_files(ftp, args, skiplines, localpath, remotepath, log):
         if lfile['name'] in remotedict:
             rfile = remotelist[remotedict[lfile['name']]] #Get fileinfo from remotelist using index 
             if lfile['type']=="file":
-                log.logprint(lfile['name']+" is present remote : "+rfile['name'])
+                log.debug(lfile['name']+" is present remote : "+rfile['name'])
                 if (lfile['modify']>rfile['modify']):
-                    log.logprint("Local file is newer by "+str(lfile['modify']-rfile['modify'])+" seconds, try to upload...")
+                    log.debug("Local file is newer by "+str(lfile['modify']-rfile['modify'])+" seconds, try to upload...")
                     upload = True
             elif lfile['type']=="dir":
-                log.logprint(lfile['name']+" is present remote and is directory: "+rfile['name'])
+                log.debug(lfile['name']+" is present remote and is directory: "+rfile['name'])
                 sync_files(ftp, args, skiplines, lfile['name'], rfile['name'], log)
         elif lfile['type']=="dir":
-            log.logprint(lfile['name']+" is NOT present remote and is directory: ")
+            log.debug(lfile['name']+" is NOT present remote and is directory: ")
             try:
                 ftp.mkd(lfile['name'])
                 log.logprint("CREATED DIR : "+lfile['name'])
@@ -168,7 +168,7 @@ def sync_files(ftp, args, skiplines, localpath, remotepath, log):
             except ftplib.all_errors, resp:
                 log.logprint("ERROR: Failed to create directory "+lfile['name']+" - "+str(resp))            
         elif lfile['type']=="file":
-            log.logprint(lfile['name']+" is NOT present remote and is file")
+            log.debug(lfile['name']+" is NOT present remote and is file")
             upload = True
                 
         #Handle upload flag            
@@ -191,7 +191,7 @@ def sync_files(ftp, args, skiplines, localpath, remotepath, log):
                 except ftplib.all_errors, resp:
                     log.logprint("ERROR: Failed to delete "+rfile['name']+" - "+str(resp))
             elif rfile['type']=="dir":
-                log.logprint("Remote dir "+rfile['name']+" not present locally, delete it recursively")
+                log.debug("Remote dir "+rfile['name']+" not present locally, delete it recursively")
                 #Remote dir is not present locally, decend and recursively delete everything
                 #TODO: recursive_delete(ftp, rfile['name'])
                 delete_recursive(ftp, args, rfile['name'], log)
@@ -212,7 +212,7 @@ def delete_recursive(ftp, args, remotepath, log):
             except ftplib.all_errors, resp:
                 log.logprint("ERROR: Failed to delete "+rfile['name']+" - "+str(resp))
         elif rfile['type']=="dir":
-            log.logprint("Remote dir "+rfile['name']+" not present locally, delete it recursively")
+            log.debug("Remote dir "+rfile['name']+" not present locally, delete it recursively")
             delete_recursive(ftp, args, rfile['name'], log)
     ftp.cwd("..")
     try:
@@ -227,11 +227,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-o", "--host", help="ftp hostname", required=True)
 parser.add_argument("-u", "--user", help="username on ftp server", required=True)
 parser.add_argument("-p", "--password", help="password", required=True)
-parser.add_argument("-d", "--debug", help="print debug to terminal, default False", action="store_true")
+parser.add_argument("-d", "--debug", 
+    help="print debug to terminal, default 0, use multiple times to increase verbosity, i.e. -d -d", 
+    action="count")
 parser.add_argument("-b", "--basedir", help="Toplevel directory on ftp server, default www")
 parser.add_argument("-t", "--path", help="Local toplevel directory, default ., i.e. current dir")
 parser.add_argument("-s", "--skipfile", help="Do not upload files in <skipfile>, default name upload.skip")
-parser.set_defaults(debug=False)
+parser.set_defaults(debug=0)
 parser.set_defaults(skipfile="upload.skip")
 parser.set_defaults(basedir="www")
 parser.set_defaults(path=".")
