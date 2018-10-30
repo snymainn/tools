@@ -21,8 +21,6 @@
 # log.logprint("Write logtext")
 # log.debug("Verbose logtext that can be printed to screen if stdout>1")
 
-
-from dircache import listdir
 from time import gmtime,strftime
 import os
 import sys
@@ -49,7 +47,7 @@ class SNYLogger:
                 if ((self.size_limit * 1024 * 1024) < filesize):
                 #if ((self.size_limit) * 50 < filesize):
                     logstring = "%s : Filesize %d reached on %s, rotating file inside logprint\n" % (nowstring, filesize,self.pathname)
-                    print logstring
+                    print(logstring)
                     self.filehandle.write(logstring)
                     self.filehandle.flush()
                     os.fsync(self.filehandle.fileno())
@@ -61,7 +59,7 @@ class SNYLogger:
         #if self.stdout = 1, only print logprint message to screen
         #if self.stdout > 1, also print debug messages to screen        
         if ( self.stdout > debug ):
-            print "%s : %s" % (nowstring,text)
+            print("%s : %s" % (nowstring,text))
             sys.stdout.flush()
 
     def debug(self, text):
@@ -71,7 +69,7 @@ class SNYLogger:
         logfilename = self.basename+'.log'
         #print "logfilename : %s" % logfilename
         dirlist = []
-        dirlist = listdir(self.logpath)
+        dirlist = os.listdir(self.logpath)
         largest = 0
         num_files = 0
         logfiles = []
@@ -97,7 +95,7 @@ class SNYLogger:
                     pathname = "%s/%s" % (self.logpath,filename)
                     try:
                         os.remove(pathname)
-                    except OSError, e:
+                    except OSError as e:
                         stderr.write("Failed to delete "+pathname+', '+e)
                     #else:
                         #print "DELETED : %s " % pathname
@@ -122,8 +120,8 @@ class SNYLogger:
         pathname = "%s/%s.%d" % (self.logpath,logfilename,largest)
 
         try:
-            filehandle = open(pathname, 'a',0)
-        except IOError,e:
+            filehandle = open(pathname, 'a')
+        except IOError as e:
             stderr.write("Failed to open "+pathname+', '+e)
         else:
             nowstring = strftime("%Y-%m-%dT%H:%M:%S", gmtime())
