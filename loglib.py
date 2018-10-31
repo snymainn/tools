@@ -54,7 +54,7 @@ class SNYLogger:
                     self.filehandle.close()
                     self.rotate_files()
             
-            self.filehandle.write(nowstring+' : '+text+'\n')
+            self.filehandle.write(nowstring+'Z : '+text+'\n')
             self.filehandle.flush()
         #if self.stdout = 1, only print logprint message to screen
         #if self.stdout > 1, also print debug messages to screen        
@@ -126,9 +126,9 @@ class SNYLogger:
         else:
             nowstring = strftime("%Y-%m-%dT%H:%M:%S", gmtime())
             if (new) :
-                filehandle.write(nowstring+' : '+"Opened new logfile - "+pathname+'\n')
+                filehandle.write(nowstring+'Z : '+"Opened new logfile - "+pathname+'\n')
             else:
-                filehandle.write(nowstring+' : '+"Appending logfile - "+pathname+'\n')
+                filehandle.write(nowstring+'Z : '+"Appending logfile - "+pathname+'\n')
             self.filehandle = filehandle
             self.pathname = pathname
 
