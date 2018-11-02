@@ -22,6 +22,9 @@ import os
 import argparse
 from email.header import decode_header
 import sys
+
+poplib._MAXLINE=20480 #Workaround for https://bugs.python.org/issue16041
+
 #Local library paths, please change
 libpath = os.environ['HOME']+"/gitwork/tools/"
 sys.path.append(libpath)
@@ -73,7 +76,15 @@ def checkMailAccount(server,user,password,email_path,index):
                 for body_no in download:
                     count+=1
                     log.logprint("Processing message : %d" % body_no)
-                    body_response, body, body_octet = pop3.retr(body_no) # Retrieve message from server
+                    #Catch errors in download of messages to avoid downloading same messages
+                    #several times
+                    try:
+                        body_response, body, body_octet = pop3.retr(body_no) # Retrieve message from server
+                    except Exception as e:
+                        log.logprint("ERROR: Failed to get message %d from server : %s" %
+                                     (body_no, str(e)))
+                        notification("Failed to get message #"+str(body_no), "Use webmail")
+                        continue
                     localtime = time.asctime(time.localtime(time.time())) # Make time to print in mbox header
                     decoded_line = ""
                     mbox_out.write("From email_notifier "+localtime+'\n') # Write mbox header
