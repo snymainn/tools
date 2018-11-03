@@ -46,7 +46,8 @@ def checkMailAccount(server,user,password,email_path,index):
         pop3.user(user)
         auth = pop3.pass_(password)
     except Exception as error:
-        log.logprint("[!] chekcing {0} failed, reason:{1}" % format(user, str(error)))
+        notification("emain_notifier error", "Login failed to %s: %s" % (server, str(error)))
+        log.logprint("[!] checking %s failed, reason: %s" % (user, str(error)))
         exit(1)
 
     #If login succeded, continue
