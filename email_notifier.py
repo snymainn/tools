@@ -128,12 +128,21 @@ def checkMailAccount(server,user,password,email_path,index):
 #
 def get_header_info(decoded_line):
     title, text = decoded_line.split(' ', 1)
-    decoded_text = decode_header(text)[0]
-    text = decoded_text[0]
-    text_coding = decoded_text[1]
-    if (text_coding is not None):
-        text = text.decode(text_coding)
-    return text   
+    parts = decode_header(text)
+    line = ""
+    for item in range(len(parts)):
+        decoded_text = parts[item]
+        text = decoded_text[0]
+        text_coding = decoded_text[1]
+        if (text_coding is not None):
+            tmp = text.decode(text_coding)
+            line += tmp
+        else:
+            try:
+                line += text
+            except:
+                line += text.decode()
+    return line
 #
 # Send notification
 #
