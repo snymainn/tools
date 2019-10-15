@@ -135,8 +135,12 @@ def get_header_info(decoded_line):
         text = decoded_text[0]
         text_coding = decoded_text[1]
         if (text_coding is not None):
-            tmp = text.decode(text_coding)
-            line += tmp
+            try:
+                tmp = text.decode('ISO-8859-1')
+                line += tmp
+            except:
+                log.logprint("Failed to decode : "+text_coding)
+                sys.exit("FATAL ERROR: Failed to decode header, more info in logfile")
         else:
             try:
                 line += text
@@ -147,6 +151,8 @@ def get_header_info(decoded_line):
 # Send notification
 #
 def notification(from_info, message):
+    from_info = from_info.replace('"', '\"');
+    message = message.replace('"', '\"');
     cmd = '"{0}" -t "{1}" send "{2}"'.format(ntfy_exe,from_info, message)
     log.logprint("ntfy command : "+cmd)
     os.system(cmd)
