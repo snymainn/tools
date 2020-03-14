@@ -43,7 +43,11 @@ def checkMailAccount(server,user,password,email_path,index):
     #Only SSL and port 995 supported, DO NOT USE non-encryptet login
     try:
         pop3 = poplib.POP3_SSL(server, 995)
-        pop3.user(user)
+    except Exception as error:
+        log.logprint("[!] checking %s failed, reason: %s" % (user, str(error)))
+        exit(1)
+    try:
+        userret = pop3.user(user)
         auth = pop3.pass_(password)
     except Exception as error:
         notification("emain_notifier error", "Login failed to %s: %s" % (server, str(error)))
