@@ -44,7 +44,7 @@ def checkMailAccount(server,user,password,email_path,index):
     try:
         pop3 = poplib.POP3_SSL(server, 995)
     except Exception as error:
-        log.logprint("[!] checking %s failed, reason: %s" % (user, str(error)))
+        log.logprint("[!] checking server %s with user %s failed, reason: %s" % (server, user, str(error)))
         exit(1)
     try:
         userret = pop3.user(user)
@@ -155,8 +155,8 @@ def get_header_info(decoded_line):
 # Send notification
 #
 def notification(from_info, message):
-    from_info = from_info.replace('"', '\"');
-    message = message.replace('"', '\"');
+    from_info = from_info.replace('"', '\\"');
+    message = message.replace('"', '\\"');
     cmd = '"{0}" -t "{1}" send "{2}"'.format(ntfy_exe,from_info, message)
     log.logprint("ntfy command : "+cmd)
     os.system(cmd)
